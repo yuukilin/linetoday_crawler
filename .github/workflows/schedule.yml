@@ -13,13 +13,13 @@ jobs:
     env:                        # 這些值來自 Secrets
       DEEPSEEK_KEY: ${{ secrets.DEEPSEEK_KEY }}
       MAIL_TO:      ${{ secrets.MAIL_TO }}
-      GCP_JSON:     ${{ secrets.GCP_JSON }}  # 如需走 Google API
+      GCP_JSON:     ${{ secrets.GCP_JSON }}
 
     steps:
-      - uses: actions/checkout@v4   # 取最新程式碼
-      - uses: actions/setup-node@v4 # 裝 Node（20 為例）
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          node-version: '20'
+          python-version: '3.11'
 
-      - run: npm ci                 # 安裝 package.json 裡鎖定的依賴
-      - run: node src/index.js      # 執行你的主程式
+      - run: pip install requests openpyxl google-api-python-client google-auth
+      - run: python linetoday.py
