@@ -11,4 +11,4 @@ jobs:
     runs-on: ubuntu-latest
 
     env:                        # 這些值來自 Secrets
-
+      DEEPSEEK_KEY: ${{ secrets.DEEPSEEK_KEY }}
