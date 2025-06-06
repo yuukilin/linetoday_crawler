@@ -282,9 +282,6 @@ function dropStock(arr){
   });
 }
 
-/* ---------- DeepSeek ---------- */
-  var pay={model:'deepseek-chat',messages:[{role:'user',content:p}],temperature:0.2,max_tokens:200};
-  var r=httpPostRaw('https://api.deepseek.com/v1/chat/completions',pay,{Authorization:'Bearer '+env('DEEPSEEK_KEY')},true);
 }
 
 /* ---------- alloc / 顏色 ---------- */
@@ -367,7 +364,7 @@ function fetchAndMail(){
   GmailApp.sendEmail(
     env('MAIL_TO'),
     'LINE Today 精選新聞（含原始與精選）',
-    '見附件：\n1. news_raw.xlsx – 原始爬蟲資料（台股個股已排除）\n2. news_filtered.xlsx – DeepSeek 精選 50 則',
+
     {attachments:[rawFile.blob,filtFile.blob]}
   );
   DriveApp.getFileById(rawFile.id).setTrashed(true);
