@@ -282,18 +282,6 @@ function dropStock(arr){
   });
 }
 
-/* ---------- OpenAI ---------- */
-var TOPICS=['總體經濟','區域政治','美國科技','債券','匯率','美國政策','美歐日股市要聞','黃金','石油','新興亞洲要聞'];
-var CODE=/```(?:json)?\s*|```/g;
-function classifyBatch(titles){
-  var salt=Utilities.getUuid();
-  var p='salt:'+salt+'\n以下列出新聞標題（**僅根據標題判斷，勿閱讀內文**），請輸出 JSON 陣列:{"idx":1,"yes":1,"topic":"總體經濟"}。\n題材:'+TOPICS.join(', ')+'\n標題:\n';
-  titles.forEach(function(t,i){p+=(i+1)+'. '+t+'\n';});
-  var pay={model:'gpt-3.5-turbo',messages:[{role:'user',content:p}],temperature:0.2,max_tokens:200};
-  var r=httpPostRaw('https://api.openai.com/v1/chat/completions',pay,{Authorization:'Bearer '+env('OPENAI_KEY')},true);
-  if(r.getResponseCode()!=200)return Array(titles.length).fill(null);
-  var txt=JSON.parse(r.getContentText()).choices[0].message.content.replace(CODE,'').trim();
-  var arr;try{arr=JSON.parse(txt);}catch(e){return Array(titles.length).fill(null);}
   var out=Array(titles.length).fill(null);
   arr.forEach(function(o){if(o.yes&&o.idx>=1&&o.idx<=titles.length)out[o.idx-1]=o.topic||TOPICS[0];});
   return out;
@@ -379,7 +367,7 @@ function fetchAndMail(){
   GmailApp.sendEmail(
     env('MAIL_TO'),
     'LINE Today 精選新聞（含原始與精選）',
-    '見附件：\n1. news_raw.xlsx – 原始爬蟲資料（台股個股已排除）\n2. news_filtered.xlsx – OpenAI 精選 50 則',
+
     {attachments:[rawFile.blob,filtFile.blob]}
   );
   DriveApp.getFileById(rawFile.id).setTrashed(true);
