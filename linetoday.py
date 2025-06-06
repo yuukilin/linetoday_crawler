@@ -14,7 +14,7 @@ from email.mime.text import MIMEText
 import base64
 
 MAIL_TO = os.getenv('MAIL_TO', 'yuukilin22@gmail.com')
-
+DEEPSEEK_KEY = os.getenv('DEEPSEEK_KEY')
 GCP_JSON = os.getenv('GCP_JSON')
 STEP = 20
 BATCH = 10
@@ -116,9 +116,9 @@ def classify_batch(titles):
     prompt = f'salt:{salt}\n以下列出新聞標題（**僅根據標題判斷，勿閱讀內文**），請輸出 JSON 陣列:{{"idx":1,"yes":1,"topic":"總體經濟"}}。\n題材:{",".join(TOPICS)}\n標題:\n'
     for i, t in enumerate(titles,1):
         prompt += f'{i}. {t}\n'
-
-        txt = r.json()['choices'][0]['message']['content']
-        txt = CODE.sub('', txt).strip()
+    pay = {'model':'deepseek-chat','messages':[{'role':'user','content':prompt}], 'temperature':0.2,'max_tokens':200}
+    headers = {'Authorization':'Bearer '+env('DEEPSEEK_KEY')}
+        r = http_post_raw('https://api.deepseek.com/v1/chat/completions', pay, headers)
         arr = json.loads(txt)
     except Exception:
         return [None]*len(titles)
@@ -164,7 +164,7 @@ def send_mail(files):
     message = MIMEMultipart()
     message['To'] = env('MAIL_TO')
     message['Subject'] = 'LINE Today 精選新聞（含原始與精選）'
-
+    message.attach(MIMEText('見附件：\n1. news_raw.xlsx – 原始爬蟲資料（台股個股已排除）\n2. news_filtered.xlsx – DeepSeek 精選 50 則'))
     for f in files:
         with open(f,'rb') as fp:
             part = MIMEApplication(fp.read(), Name=os.path.basename(f))
