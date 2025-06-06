@@ -14,7 +14,7 @@ from email.mime.text import MIMEText
 import base64
 
 MAIL_TO = os.getenv('MAIL_TO', 'yuukilin22@gmail.com')
-OPENAI_KEY = os.getenv('OPENAI_KEY')
+
 GCP_JSON = os.getenv('GCP_JSON')
 STEP = 20
 BATCH = 10
@@ -56,12 +56,7 @@ def crawl_tab(tab, cutoff):
     fb = json.loads(re.search(r'<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)</script>', html).group(1))['props']['pageProps']['fallback']
     lids, out = {}, []
     for v in fb.values():
-        items = v if isinstance(v, list) else [v]
-        for it in items:
-            for m in it.get('modules', []):
-                for l in m.get('listings', []):
-                    if ':' not in l.get('id', ''):
-                        lids[l['id']] = 1
+
     def to_art(it):
         it = it.get('article', it)
         slug = it.get('url',{}).get('hash') or it.get('canonicalUrl','').split('/')[-1]
@@ -121,12 +116,7 @@ def classify_batch(titles):
     prompt = f'salt:{salt}\n以下列出新聞標題（**僅根據標題判斷，勿閱讀內文**），請輸出 JSON 陣列:{{"idx":1,"yes":1,"topic":"總體經濟"}}。\n題材:{",".join(TOPICS)}\n標題:\n'
     for i, t in enumerate(titles,1):
         prompt += f'{i}. {t}\n'
-    pay = {'model':'gpt-3.5-turbo', 'messages':[{'role':'user','content':prompt}], 'temperature':0.2, 'max_tokens':200}
-    headers = {'Authorization':'Bearer '+env('OPENAI_KEY')}
-    try:
-        r = http_post_raw('https://api.openai.com/v1/chat/completions', pay, headers)
-        txt = r.json()['choices'][0]['message']['content']
-        txt = CODE.sub('', txt).strip()
+
         arr = json.loads(txt)
     except Exception:
         return [None]*len(titles)
@@ -172,7 +162,7 @@ def send_mail(files):
     message = MIMEMultipart()
     message['To'] = env('MAIL_TO')
     message['Subject'] = 'LINE Today 精選新聞（含原始與精選）'
-    message.attach(MIMEText('見附件：\n1. news_raw.xlsx – 原始爬蟲資料（台股個股已排除）\n2. news_filtered.xlsx – OpenAI 精選 50 則'))
+
     for f in files:
         with open(f,'rb') as fp:
             part = MIMEApplication(fp.read(), Name=os.path.basename(f))
