@@ -1,0 +1,25 @@
+name: news-crawler-schedule
+
+'on':
+  schedule:
+    # GitHub cron 用 UTC！台北 15:30 = UTC 07:30
+    - cron: '30 7 * * 1-5'
+  workflow_dispatch:  # 手動按按鈕也能觸發（方便除錯）
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+
+    env: # Secrets
+      OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
+      MAIL_TO: ${{ secrets.MAIL_TO }}
+      GCP_JSON: ${{ secrets.GCP_JSON }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - run: pip install requests openpyxl google-api-python-client google-auth
+      - run: python linetoday.py
